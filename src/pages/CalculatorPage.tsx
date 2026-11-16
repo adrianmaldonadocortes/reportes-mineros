@@ -90,7 +90,6 @@ export default function CalculatorPage() {
           <button className={'tab ' + (period === 'monthly' ? 'active' : '')} onClick={() => setPeriod('monthly')}>Mensual</button>
         </div>
         <div className="helper">{period === 'weekly' ? 'Semana actual: lunes a domingo (7 días).' : `Mes calendario actual (${days} días).`}</div>
-        <div className="helper">Se usa la semana actual (lunes a domingo) o el mes calendario actual.</div>
       </div>
 
       <div className="card">
