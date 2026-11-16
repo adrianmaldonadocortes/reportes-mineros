@@ -112,6 +112,37 @@ th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: upp
 .table-sub { font-size: 11px; color: var(--muted); }
 hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
+.equipment-heading, .service-day-heading, .equipment-details-heading, .service-record-heading {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; min-width: 0;
+}
+.equipment-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, .65fr); gap: 8px; margin: 12px 0; }
+.equipment-list { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.equipment-list-heading { padding: 10px 12px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--border); }
+.equipment-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-width: 0; text-align: left; padding: 12px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.equipment-item:last-child { border-bottom: 0; }
+.equipment-item-main { min-width: 0; }
+.equipment-item-title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; color: #fff; }
+.equipment-item-title strong { font-size: 15px; }
+.equipment-item-title span, .equipment-item-specs { font-size: 12px; color: var(--muted); }
+.equipment-item-specs { margin-top: 3px; overflow-wrap: anywhere; }
+.equipment-serial { display: block; margin-top: 2px; }
+.equipment-status { flex: 0 0 auto; display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid transparent; }
+.equipment-status-active { color: #86efac; border-color: rgba(34,197,94,.25); background: linear-gradient(135deg, rgba(34,197,94,.16), rgba(34,197,94,.06)); }
+.equipment-status-maintenance { color: #fde68a; border-color: rgba(245,158,11,.25); background: linear-gradient(135deg, rgba(245,158,11,.16), rgba(245,158,11,.06)); }
+.equipment-status-out { color: #fca5a5; border-color: rgba(239,68,68,.25); background: linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.06)); }
+.equipment-status-retired { color: #cbd5e1; border-color: rgba(203,213,225,.2); background: linear-gradient(135deg, rgba(203,213,225,.12), rgba(148,163,184,.05)); }
+.equipment-details { margin-top: 12px; }
+.equipment-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.equipment-detail-label { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+.service-day-heading { margin-bottom: 8px; }
+.service-record-list { display: grid; gap: 8px; margin-top: 10px; }
+.service-record { min-width: 0; border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: rgba(15,23,42,.28); }
+.service-record-heading strong { color: #fff; }
+.service-failure { margin: 10px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.service-work { margin: 8px 0 12px; padding: 9px; border-radius: 9px; background: rgba(34,197,94,.08); overflow-wrap: anywhere; }
+.service-delete { display: block; margin: 10px 0 0 auto; color: #fca5a5; background: transparent; border: 0; padding: 6px; font: inherit; font-size: 12px; cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+
 @media (max-width: 520px) {
   html, body, #root { width: 100%; overflow-x: hidden; }
   .main { padding: 12px; }
@@ -127,6 +158,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
   .date-row input[type="date"] { padding-inline: 8px; }
   .card { min-width: 0; padding: 12px; }
   .card[style*="padding: 0"] { overflow-x: auto; }
+  .equipment-filters { grid-template-columns: minmax(0, 1fr); }
+  .equipment-heading, .service-day-heading { align-items: flex-start; flex-wrap: wrap; }
+  .equipment-details-heading { align-items: flex-start; }
+  .equipment-detail-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .equipment-item { align-items: flex-start; }
+  .service-record-heading { align-items: flex-start; }
   table { table-layout: fixed; }
   th, td { padding: 6px 4px; overflow-wrap: anywhere; }
 }

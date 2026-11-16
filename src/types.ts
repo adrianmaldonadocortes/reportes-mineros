@@ -4,7 +4,7 @@ export interface Fleet {
   createdAt: number;
 }
 
-export type EquipmentStatus = 'active' | 'inactive' | 'maintenance';
+export type EquipmentStatus = 'active' | 'maintenance' | 'inactive' | 'out_of_service' | 'retired';
 
 export interface Equipment {
   id: string;
@@ -94,6 +94,28 @@ export interface Calculation {
   unavailability: number;
   availability: number;
   createdAt: number;
+}
+
+export interface FieldServiceRecord {
+  id: string;
+  serviceDate: string;
+  equipmentId: string;
+  equipment: {
+    internalNumber: string;
+    name: string;
+    type: string;
+    brand: string;
+    model: string;
+    serialNumber: string;
+    fleetName: string;
+  };
+  reportedAt: string;
+  failure: string;
+  status: 'open' | 'completed';
+  deliveredAt?: string;
+  workDone?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface Settings {

@@ -1,11 +1,12 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import type { Fleet, Equipment, Report, Calculation, Settings } from './types';
+import type { Fleet, Equipment, Report, Calculation, Settings, FieldServiceRecord } from './types';
 
 interface AppDB extends DBSchema {
   fleets: { key: string; value: Fleet };
   equipment: { key: string; value: Equipment };
   reports: { key: string; value: Report };
   calculations: { key: string; value: Calculation };
+  fieldService: { key: string; value: FieldServiceRecord };
   settings: { key: string; value: Settings };
 }
 
@@ -13,12 +14,13 @@ let dbPromise: Promise<IDBPDatabase<AppDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<AppDB>('reportes-mineros', 1, {
+    dbPromise = openDB<AppDB>('reportes-mineros', 2, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('fleets')) db.createObjectStore('fleets', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('equipment')) db.createObjectStore('equipment', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('reports')) db.createObjectStore('reports', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('calculations')) db.createObjectStore('calculations', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('fieldService')) db.createObjectStore('fieldService', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
       }
     });
@@ -59,6 +61,27 @@ export async function listCalculations(): Promise<Calculation[]> {
 export async function saveCalculation(c: Calculation) { return (await getDB()).put('calculations', c); }
 export async function deleteCalculation(id: string) { return (await getDB()).delete('calculations', id); }
 
+// Field service
+export async function listFieldServiceRecords(): Promise<FieldServiceRecord[]> {
+  return (await getDB()).getAll('fieldService');
+}
+export async function saveFieldServiceRecord(record: FieldServiceRecord) {
+  return (await getDB()).put('fieldService', record);
+}
+export async function deleteFieldServiceRecord(id: string) {
+  return (await getDB()).delete('fieldService', id);
+}
+export async function deleteFieldServiceRecordsInRange(start: string, end: string) {
+  const db = await getDB();
+  const tx = db.transaction('fieldService', 'readwrite');
+  const store = tx.objectStore('fieldService');
+  const records = await store.getAll();
+  const matched = records.filter(record => record.serviceDate >= start && record.serviceDate <= end);
+  await Promise.all(matched.map(record => store.delete(record.id)));
+  await tx.done;
+  return matched;
+}
+
 // Settings
 export async function getSettings(): Promise<Settings | undefined> {
   return (await getDB()).get('settings', 'main');
@@ -68,25 +91,27 @@ export async function saveSettings(s: Settings) { return (await getDB()).put('se
 // Backup / Restore
 export async function exportAll() {
   const db = await getDB();
-  const [fleets, equipment, reports, calculations, settings] = await Promise.all([
+  const [fleets, equipment, reports, calculations, fieldService, settings] = await Promise.all([
     db.getAll('fleets'), db.getAll('equipment'), db.getAll('reports'),
-    db.getAll('calculations'), db.getAll('settings')
+    db.getAll('calculations'), db.getAll('fieldService'), db.getAll('settings')
   ]);
-  return { version: 1, exportedAt: new Date().toISOString(), fleets, equipment, reports, calculations, settings };
+  return { version: 2, exportedAt: new Date().toISOString(), fleets, equipment, reports, calculations, fieldService, settings };
 }
 
 export async function importAll(data: any) {
   const db = await getDB();
-  const tx = db.transaction(['fleets', 'equipment', 'reports', 'calculations', 'settings'], 'readwrite');
+  const tx = db.transaction(['fleets', 'equipment', 'reports', 'calculations', 'fieldService', 'settings'], 'readwrite');
   await tx.objectStore('fleets').clear();
   await tx.objectStore('equipment').clear();
   await tx.objectStore('reports').clear();
   await tx.objectStore('calculations').clear();
+  await tx.objectStore('fieldService').clear();
   await tx.objectStore('settings').clear();
   for (const f of data.fleets || []) await tx.objectStore('fleets').put(f);
   for (const e of data.equipment || []) await tx.objectStore('equipment').put(e);
   for (const r of data.reports || []) await tx.objectStore('reports').put(r);
   for (const c of data.calculations || []) await tx.objectStore('calculations').put(c);
+  for (const r of data.fieldService || []) await tx.objectStore('fieldService').put(r);
   for (const s of data.settings || []) await tx.objectStore('settings').put(s);
   await tx.done;
 }

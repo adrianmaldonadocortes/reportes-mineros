@@ -16,6 +16,11 @@ export default function Home() {
           <div className="tile-title">Mis equipos</div>
           <div className="tile-sub">Flota y equipos</div>
         </Link>
+        <Link to="/atenciones" className="tile">
+          <div className="tile-icon">🛠️</div>
+          <div className="tile-title">Atenciones en terreno</div>
+          <div className="tile-sub">Detenciones y entregas diarias</div>
+        </Link>
         <Link to="/calculadora" className="tile">
           <div className="tile-icon">📊</div>
           <div className="tile-title">Calculadora</div>

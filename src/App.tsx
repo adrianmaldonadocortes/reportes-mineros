@@ -7,6 +7,7 @@ import ReportFormPage from './pages/ReportFormPage';
 import CalculatorPage from './pages/CalculatorPage';
 import HistoryPage from './pages/HistoryPage';
 import SettingsPage from './pages/SettingsPage';
+import FieldServicePage from './pages/FieldServicePage';
 
 export default function App() {
   const location = useLocation();
@@ -28,6 +29,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/equipos" element={<EquipmentPage />} />
+          <Route path="/atenciones" element={<FieldServicePage />} />
           <Route path="/flotas" element={<FleetsPage />} />
           <Route path="/informes" element={<ReportsPage />} />
           <Route path="/informes/:id" element={<ReportFormPage />} />
