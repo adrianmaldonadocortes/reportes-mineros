@@ -1,84 +1,80 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalculationRow, Calculation, Equipment, Fleet, PeriodType, CalcType } from '../types';
+import type { Calculation, CalculationRow, Equipment, Fleet, PeriodType } from '../types';
 import { listEquipment, listFleets, saveCalculation, uid } from '../db';
-import { daysBetween, toDateInput, formatDate } from '../utils';
+
+type Period = Exclude<PeriodType, 'daily'>;
+
+const pad = (value: number) => String(value).padStart(2, '0');
+const dateInput = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+function currentPeriod(period: Period) {
+  const now = new Date();
+  if (period === 'monthly') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { startDate: dateInput(start), endDate: dateInput(end), days: end.getDate() };
+  }
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { startDate: dateInput(start), endDate: dateInput(end), days: 7 };
+}
 
 export default function CalculatorPage() {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [fleets, setFleets] = useState<Fleet[]>([]);
-  const [type, setType] = useState<CalcType>('individual');
-  const [period, setPeriod] = useState<PeriodType>('daily');
-  const [startDate, setStartDate] = useState(toDateInput(new Date().toISOString()));
-  const [endDate, setEndDate] = useState(toDateInput(new Date().toISOString()));
-  const [selectedFleet, setSelectedFleet] = useState<string>('');
-  const [selectedEquipment, setSelectedEquipment] = useState<string>('');
-  const [individualSource, setIndividualSource] = useState<'registered' | 'fleet' | 'manual'>('registered');
-  const [manualEquipment, setManualEquipment] = useState({ internalNumber: '', name: '', dailyHours: 24 });
-  const [individualHours, setIndividualHours] = useState<number>(0);
-  const [fleetHours, setFleetHours] = useState<Record<string, number>>({});
+  const [period, setPeriod] = useState<Period>('weekly');
+  const [source, setSource] = useState<'registered' | 'manual'>('registered');
+  const [selectedEquipment, setSelectedEquipment] = useState('');
+  const [manualFleet, setManualFleet] = useState({ name: '', count: 10, dailyHours: 16 });
+  const [stoppedHours, setStoppedHours] = useState(8);
   const [saved, setSaved] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      setEquipments(await listEquipment());
-      setFleets(await listFleets());
+      const [equipmentList, fleetList] = await Promise.all([listEquipment(), listFleets()]);
+      setEquipments(equipmentList.filter(e => e.status === 'active'));
+      setFleets(fleetList);
+      if (equipmentList.some(e => e.status === 'active')) setSelectedEquipment(equipmentList.find(e => e.status === 'active')!.id);
+      else setSource('manual');
     })();
   }, []);
 
-  const applyPeriod = (p: PeriodType) => {
-    setPeriod(p);
-    const start = new Date(startDate);
-    if (p === 'daily') setEndDate(toDateInput(start.toISOString()));
-    if (p === 'weekly') { const e = new Date(start); e.setDate(e.getDate() + 6); setEndDate(toDateInput(e.toISOString())); }
-    if (p === 'monthly') { const e = new Date(start); e.setDate(e.getDate() + 29); setEndDate(toDateInput(e.toISOString())); }
-  };
-
-  const days = useMemo(() => daysBetween(startDate, endDate), [startDate, endDate]);
-
-  const fleetEquipments = useMemo(
-    () => equipments.filter(e => e.status === 'active' && e.fleetId === selectedFleet),
-    [equipments, selectedFleet]
-  );
-
-  const rows: CalculationRow[] = useMemo(() => {
-    if (type === 'individual') {
-      if (individualSource === 'manual') {
-        const internalNumber = manualEquipment.internalNumber.trim() || manualEquipment.name.trim();
-        if (!internalNumber || manualEquipment.dailyHours <= 0) return [];
-        return [{
-          equipmentId: 'manual', internalNumber, name: manualEquipment.name.trim() || 'Equipo manual',
-          dailyHours: manualEquipment.dailyHours, stoppedHours: individualHours
-        }];
-      }
-      const eq = equipments.find(e => e.id === selectedEquipment);
-      if (!eq) return [];
-      return [{
-        equipmentId: eq.id, internalNumber: eq.internalNumber, name: eq.name || eq.type,
-        dailyHours: eq.dailyHours, stoppedHours: individualHours
-      }];
-    } else {
-      return fleetEquipments.map(e => ({
-        equipmentId: e.id, internalNumber: e.internalNumber, name: e.name || e.type,
-        dailyHours: e.dailyHours, stoppedHours: fleetHours[e.id] || 0
-      }));
-    }
-  }, [type, individualSource, manualEquipment, selectedEquipment, equipments, individualHours, fleetEquipments, fleetHours]);
-
-  const totalProgrammed = rows.reduce((s, r) => s + r.dailyHours * days, 0);
-  const totalStopped = rows.reduce((s, r) => s + r.stoppedHours, 0);
-  const unavailability = totalProgrammed > 0 ? (totalStopped / totalProgrammed) * 100 : 0;
+  const equipment = equipments.find(e => e.id === selectedEquipment);
+  const equipmentFleet = equipment?.fleetId
+    ? equipments.filter(e => e.fleetId === equipment.fleetId)
+    : equipment ? [equipment] : [];
+  const fleetCount = source === 'manual' ? manualFleet.count : equipmentFleet.length;
+  const fleetDailyHours = source === 'manual'
+    ? manualFleet.count * manualFleet.dailyHours
+    : equipmentFleet.reduce((sum, e) => sum + e.dailyHours, 0);
+  const fleetName = source === 'manual'
+    ? manualFleet.name.trim() || 'Flota ingresada manualmente'
+    : (fleets.find(f => f.id === equipment?.fleetId)?.name || equipment?.name || 'Flota');
+  const { startDate, endDate, days } = useMemo(() => currentPeriod(period), [period]);
+  const totalProgrammed = fleetDailyHours * days;
+  const unavailability = totalProgrammed > 0 ? (stoppedHours / totalProgrammed) * 100 : 0;
   const availability = 100 - unavailability;
+  const canCalculate = fleetCount > 0 && fleetDailyHours > 0 && stoppedHours >= 0;
+
+  const rows: CalculationRow[] = canCalculate ? [{
+    equipmentId: source === 'manual' ? 'manual-fleet' : equipment?.id || '',
+    internalNumber: `${fleetCount} equipos`,
+    name: source === 'manual' ? manualFleet.name.trim() || 'Flota manual' : fleetName,
+    dailyHours: fleetDailyHours,
+    stoppedHours
+  }] : [];
 
   const save = async () => {
-    if (!rows.length) { alert('Sin datos para guardar.'); return; }
-    const c: Calculation = {
-      id: uid(), type, period, startDate, endDate, days,
-      fleetId: type === 'fleet' ? selectedFleet : undefined,
-      fleetName: type === 'fleet' ? fleets.find(f => f.id === selectedFleet)?.name : undefined,
-      rows, totalProgrammed, totalStopped, unavailability, availability,
-      createdAt: Date.now()
+    if (!canCalculate) return;
+    const calculation: Calculation = {
+      id: uid(), type: 'fleet', period, startDate, endDate, days,
+      fleetId: source === 'registered' ? equipment?.fleetId : undefined,
+      fleetName, rows, totalProgrammed, totalStopped: stoppedHours,
+      unavailability, availability, createdAt: Date.now()
     };
-    await saveCalculation(c);
+    await saveCalculation(calculation);
     setSaved('Cálculo guardado en el historial.');
     setTimeout(() => setSaved(null), 2500);
   };
@@ -87,155 +83,89 @@ export default function CalculatorPage() {
     <>
       <h2 style={{ marginTop: 0 }}>Calculadora de indisponibilidad</h2>
 
-      <div className="tabs">
-        <button className={'tab ' + (type === 'individual' ? 'active' : '')} onClick={() => setType('individual')}>Individual</button>
-        <button className={'tab ' + (type === 'fleet' ? 'active' : '')} onClick={() => setType('fleet')}>Flota</button>
+      <div className="card">
+        <div className="card-title">Período</div>
+        <div className="tabs period-tabs">
+          <button className={'tab ' + (period === 'weekly' ? 'active' : '')} onClick={() => setPeriod('weekly')}>Semanal · 7 días</button>
+          <button className={'tab ' + (period === 'monthly' ? 'active' : '')} onClick={() => setPeriod('monthly')}>Mensual</button>
+        </div>
+        <div className="helper">{period === 'weekly' ? 'Semana actual: lunes a domingo (7 días).' : `Mes calendario actual (${days} días).`}</div>
+        <div className="helper">Se usa la semana actual (lunes a domingo) o el mes calendario actual.</div>
       </div>
 
       <div className="card">
-        <div className="card-title">Período</div>
-        <div className="tabs" style={{ marginBottom: 10 }}>
-          <button className={'tab ' + (period === 'daily' ? 'active' : '')} onClick={() => applyPeriod('daily')}>Diario</button>
-          <button className={'tab ' + (period === 'weekly' ? 'active' : '')} onClick={() => applyPeriod('weekly')}>Semanal</button>
-          <button className={'tab ' + (period === 'monthly' ? 'active' : '')} onClick={() => applyPeriod('monthly')}>Mensual</button>
-          <button className={'tab ' + (period === 'custom' ? 'active' : '')} onClick={() => applyPeriod('custom')}>Personal.</button>
-        </div>
-        <div className="row date-row">
-          <div><label className="label">Desde</label><input className="input" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
-          <div><label className="label">Hasta</label><input className="input" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
-        </div>
-        <div className="helper">Días del período: {days}</div>
+        <div className="card-title">Flota y equipo detenido</div>
+        <label className="label" htmlFor="fleet-source">Datos de la flota</label>
+        <select id="fleet-source" className="select" value={source}
+          onChange={e => setSource(e.target.value as 'registered' | 'manual')}>
+          <option value="registered">Elegir un equipo guardado</option>
+          <option value="manual">Ingresar flota manualmente</option>
+        </select>
+
+        {source === 'registered' ? <>
+          <label className="label" htmlFor="equipment-select">Equipo detenido</label>
+          <select id="equipment-select" className="select" value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
+            <option value="">Seleccionar equipo</option>
+            {equipments.map(e => {
+              const fleet = fleets.find(f => f.id === e.fleetId);
+              return <option key={e.id} value={e.id}>
+                {e.internalNumber} · {e.name || e.type}{fleet ? ` · Flota: ${fleet.name}` : ' · Sin flota'}
+              </option>;
+            })}
+          </select>
+          {equipment && <div className="helper">
+            {equipment.fleetId
+              ? `${equipmentFleet.length} equipo(s) en la flota · ${fleetDailyHours} horas programadas por día en total.`
+              : 'Este equipo no está asociado a una flota guardada; se calculará como un equipo.'}
+          </div>}
+        </> : <>
+          <label className="label" htmlFor="manual-fleet-name">Nombre o tipo de flota (opcional)</label>
+          <input id="manual-fleet-name" className="input" placeholder="Ej.: Bulldozer" value={manualFleet.name}
+            onChange={e => setManualFleet(v => ({ ...v, name: e.target.value }))} />
+          <div className="row">
+            <div>
+              <label className="label" htmlFor="manual-fleet-count">Cantidad de equipos</label>
+              <input id="manual-fleet-count" className="input" type="number" min="1" step="1" value={manualFleet.count}
+                onChange={e => setManualFleet(v => ({ ...v, count: Number(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <label className="label" htmlFor="manual-fleet-hours">Horas de trabajo por equipo al día</label>
+              <input id="manual-fleet-hours" className="input" type="number" min="0.5" step="0.5" value={manualFleet.dailyHours}
+                onChange={e => setManualFleet(v => ({ ...v, dailyHours: Number(e.target.value) || 0 }))} />
+            </div>
+          </div>
+          <div className="helper">Ejemplo: 10 equipos × 16 h/día.</div>
+        </>}
       </div>
 
-      {type === 'individual' && (
-        <div className="card">
-          <div className="card-title">Equipo</div>
-          <label className="label" htmlFor="equipment-source">Origen del equipo</label>
-          <select id="equipment-source" className="select" value={individualSource}
-            onChange={e => { setIndividualSource(e.target.value as typeof individualSource); setSelectedEquipment(''); }}>
-            <option value="registered">Equipo guardado</option>
-            <option value="fleet">Elegir desde mi flota</option>
-            <option value="manual">Ingresar equipo manualmente</option>
-          </select>
-          {individualSource === 'registered' && (
-            <select className="select" style={{ marginTop: 8 }} value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
-              <option value="">Seleccionar equipo</option>
-              {equipments.map(e => <option key={e.id} value={e.id}>{e.internalNumber} · {e.name || e.type} ({e.dailyHours}h/día)</option>)}
-            </select>
-          )}
-          {individualSource === 'fleet' && <>
-            <label className="label" htmlFor="individual-fleet">Flota</label>
-            <select id="individual-fleet" className="select" value={selectedFleet}
-              onChange={e => { setSelectedFleet(e.target.value); setSelectedEquipment(''); }}>
-              <option value="">Seleccionar flota</option>
-              {fleets.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-            <label className="label" htmlFor="fleet-equipment">Equipo de la flota</label>
-            <select id="fleet-equipment" className="select" value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
-              <option value="">Seleccionar equipo</option>
-              {fleetEquipments.map(e => <option key={e.id} value={e.id}>{e.internalNumber} · {e.name || e.type} ({e.dailyHours}h/día)</option>)}
-            </select>
-          </>}
-          {individualSource === 'manual' && <>
-            <label className="label">N° interno (o nombre del equipo)</label>
-            <input className="input" value={manualEquipment.internalNumber}
-              onChange={e => setManualEquipment(v => ({ ...v, internalNumber: e.target.value }))} />
-            <label className="label">Nombre / descripción</label>
-            <input className="input" value={manualEquipment.name}
-              onChange={e => setManualEquipment(v => ({ ...v, name: e.target.value }))} />
-            <label className="label">Horas programadas por día</label>
-            <input className="input" type="number" min="0.5" step="0.5" value={manualEquipment.dailyHours}
-              onChange={e => setManualEquipment(v => ({ ...v, dailyHours: Number(e.target.value) || 0 }))} />
-            {!manualEquipment.internalNumber.trim() && !manualEquipment.name.trim() &&
-              <div className="helper">Ingresa un número interno o el nombre del equipo para calcular.</div>}
-          </>}
-          {(individualSource === 'manual' ? rows.length > 0 : selectedEquipment !== '') && (
-            <>
-              <label className="label">Horas detenidas (total del período)</label>
-              <input className="input" type="number" min="0" step="0.5" value={individualHours}
-                onChange={e => setIndividualHours(Number(e.target.value) || 0)} />
-              <div className="helper">Ingresa el total UNA vez. No se multiplica por los días.</div>
-            </>
-          )}
-        </div>
-      )}
+      <div className="card">
+        <div className="card-title">Detención</div>
+        <label className="label" htmlFor="stopped-hours">Horas detenido un equipo</label>
+        <input id="stopped-hours" className="input" type="number" min="0" step="0.5" value={stoppedHours}
+          onChange={e => setStoppedHours(Number(e.target.value) || 0)} />
+        <div className="helper">Ingresa el total de horas detenido para un equipo durante el período.</div>
+      </div>
 
-      {type === 'fleet' && (
-        <div className="card">
-          <div className="card-title">Flota</div>
-          <select className="select" value={selectedFleet} onChange={e => { setSelectedFleet(e.target.value); setFleetHours({}); }}>
-            <option value="">Seleccionar flota</option>
-            {fleets.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </select>
-          {fleetEquipments.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              {fleetEquipments.map(e => (
-                <div key={e.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                  <div style={{ flex: 1, fontSize: 13 }}>
-                    <strong>{e.internalNumber}</strong> {e.name || e.type}
-                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>{e.dailyHours}h/día</div>
-                  </div>
-                  <input className="input" type="number" min="0" step="0.5" style={{ width: 100 }}
-                    placeholder="0 h"
-                    value={fleetHours[e.id] || 0}
-                    onChange={ev => setFleetHours(h => ({ ...h, [e.id]: Number(ev.target.value) || 0 }))} />
-                </div>
-              ))}
-              <div className="helper">Ingresa el TOTAL de horas detenidas por equipo en todo el período. No multipliques por días.</div>
+      {canCalculate && <>
+        <div className="result-box">
+          <div className="row">
+            <div>
+              <div className="result-label">Indisponibilidad de la flota</div>
+              <div className="result-value bad">{unavailability.toFixed(2)}%</div>
             </div>
-          )}
-          {selectedFleet && fleetEquipments.length === 0 && (
-            <div className="empty">Esta flota no tiene equipos activos.</div>
-          )}
-        </div>
-      )}
-
-      {rows.length > 0 && (
-        <>
-          <div className="result-box">
-            <div className="row">
-              <div>
-                <div className="result-label">Indisponibilidad</div>
-                <div className="result-value bad">{unavailability.toFixed(2)}%</div>
-              </div>
-              <div>
-                <div className="result-label">Disponibilidad</div>
-                <div className="result-value good">{availability.toFixed(2)}%</div>
-              </div>
-            </div>
-            <div className="helper" style={{ marginTop: 8 }}>
-              Programado: <strong>{totalProgrammed.toFixed(1)} h</strong> · Detenido: <strong>{totalStopped.toFixed(1)} h</strong> · {days} día(s)
+            <div>
+              <div className="result-label">Disponibilidad</div>
+              <div className="result-value good">{availability.toFixed(2)}%</div>
             </div>
           </div>
-
-          <div className="card" style={{ padding: 0 }}>
-            <table>
-              <thead>
-                <tr><th>Equipo</th><th>Prog.</th><th>Det.</th><th>Indiv.</th><th>Aporte</th></tr>
-              </thead>
-              <tbody>
-                {rows.map(r => {
-                  const prog = r.dailyHours * days;
-                  const indiv = prog > 0 ? (r.stoppedHours / prog) * 100 : 0;
-                  const aport = totalProgrammed > 0 ? (r.stoppedHours / totalProgrammed) * 100 : 0;
-                  return (
-                    <tr key={r.equipmentId}>
-                      <td><strong>{r.internalNumber}</strong><div style={{ fontSize: 10, color: 'var(--muted)' }}>{r.name}</div></td>
-                      <td>{prog.toFixed(0)}h</td>
-                      <td>{r.stoppedHours}h</td>
-                      <td>{indiv.toFixed(1)}%</td>
-                      <td>{aport.toFixed(2)}%</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="helper" style={{ marginTop: 8 }}>
+            {fleetCount} equipos × {source === 'manual' ? manualFleet.dailyHours : equipmentFleet.length ? (fleetDailyHours / fleetCount).toFixed(1) : 0} h/día × {days} días = <strong>{totalProgrammed.toFixed(1)} h programadas</strong>.
+            {' '}{stoppedHours} h detenido ÷ {totalProgrammed.toFixed(1)} h = <strong>{unavailability.toFixed(2)}%</strong> de indisponibilidad.
           </div>
-
-          <button className="btn" onClick={save}>💾 Guardar cálculo</button>
-          {saved && <div className="toast">{saved}</div>}
-        </>
-      )}
+        </div>
+        <button className="btn" onClick={save}>💾 Guardar cálculo</button>
+        {saved && <div className="toast">{saved}</div>}
+      </>}
     </>
   );
 }

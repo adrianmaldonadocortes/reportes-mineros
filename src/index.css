@@ -65,7 +65,7 @@ body {
 .label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
 .input, .select, .textarea {
   width: 100%; min-width: 0; max-width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--bg-2); color: var(--text); font-size: 15px; font-family: inherit;
+  background: var(--bg-2); color: var(--text); font-size: 16px; font-family: inherit;
   outline: none;
 }
 .input:focus, .select:focus, .textarea:focus { border-color: var(--blue); }
@@ -102,6 +102,14 @@ th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: upp
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card-2); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; z-index: 100; font-size: 14px; }
 .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 26px; border: none; box-shadow: 0 6px 20px rgba(249,115,22,.4); cursor: pointer; z-index: 50; }
 .helper { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.date-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; width: 100%; min-width: 0; }
+.date-row > div { width: 100%; min-width: 0; max-width: 100%; overflow: hidden; }
+.date-row input[type="date"] {
+  display: block; box-sizing: border-box; inline-size: 100%; width: 100%; min-inline-size: 0; min-width: 0;
+  max-inline-size: 100%; max-width: 100%; font-size: 16px; -webkit-appearance: none; appearance: none;
+}
+.calculation-table { overflow-x: auto; }
+.table-sub { font-size: 11px; color: var(--muted); }
 hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
 @media (max-width: 520px) {
@@ -113,9 +121,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
   .tile-title, .tile-sub { overflow-wrap: anywhere; }
   .row { flex-wrap: wrap; }
   .row > * { flex-basis: calc(50% - 4px); }
-  .date-row { flex-direction: column; align-items: stretch; }
-  .date-row > * { flex-basis: auto; width: 100%; }
-  .date-row input[type="date"] { min-width: 0; width: 100%; font-size: 14px; }
+  .period-tabs { flex-wrap: wrap; }
+  .period-tabs .tab { flex: 1 1 100px; padding: 10px 6px; font-size: 12px; }
+  .date-row { grid-template-columns: minmax(0, 1fr); }
+  .date-row input[type="date"] { padding-inline: 8px; }
   .card { min-width: 0; padding: 12px; }
   .card[style*="padding: 0"] { overflow-x: auto; }
   table { table-layout: fixed; }
