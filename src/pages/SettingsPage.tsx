@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { TechnicianInfo, Settings } from '../types';
+import { TechnicianInfo, Settings, ShiftSchedule } from '../types';
 import { getSettings, saveSettings, exportAll, importAll } from '../db';
 import { downloadBlob } from '../utils';
 
 export default function SettingsPage() {
   const [tech, setTech] = useState<TechnicianInfo>({ name: '', position: '', company: '', area: '', shift: '' });
+  const [schedule, setSchedule] = useState<ShiftSchedule>({ dayStart: '08:00', dayEnd: '20:00', nightStart: '20:00', nightEnd: '08:00' });
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -12,11 +13,12 @@ export default function SettingsPage() {
     (async () => {
       const s = await getSettings();
       if (s?.technician) setTech(s.technician);
+      if (s?.shiftSchedule) setSchedule(s.shiftSchedule);
     })();
   }, []);
 
   const save = async () => {
-    await saveSettings({ key: 'main', technician: tech });
+    await saveSettings({ key: 'main', technician: tech, shiftSchedule: schedule });
     setMsg('Datos guardados');
     setTimeout(() => setMsg(''), 2000);
   };
@@ -57,6 +59,21 @@ export default function SettingsPage() {
             <input className="input" value={tech.area} onChange={e => setTech({ ...tech, area: e.target.value })} /></div>
         </div>
         <button className="btn" style={{ marginTop: 12 }} onClick={save}>Guardar datos</button>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Horario de turnos</div>
+        <div className="helper">Define el inicio y término de cada turno. Se usa al iniciar una jornada en Atenciones en terreno.</div>
+        <div className="row">
+          <div><label className="label">Turno A · Día · Inicio</label><input className="input" type="time" value={schedule.dayStart} onChange={e => setSchedule({ ...schedule, dayStart: e.target.value })} /></div>
+          <div><label className="label">Término</label><input className="input" type="time" value={schedule.dayEnd} onChange={e => setSchedule({ ...schedule, dayEnd: e.target.value })} /></div>
+        </div>
+        <div className="row">
+          <div><label className="label">Turno B · Noche · Inicio</label><input className="input" type="time" value={schedule.nightStart} onChange={e => setSchedule({ ...schedule, nightStart: e.target.value })} /></div>
+          <div><label className="label">Término</label><input className="input" type="time" value={schedule.nightEnd} onChange={e => setSchedule({ ...schedule, nightEnd: e.target.value })} /></div>
+        </div>
+        <div className="helper">Horario inicial: día 08:00–20:00 · noche 20:00–08:00. Si termina antes de la hora de inicio, se considera el día siguiente.</div>
+        <button className="btn" style={{ marginTop: 12 }} onClick={save}>Guardar horarios</button>
       </div>
 
       <div className="card">

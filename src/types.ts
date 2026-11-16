@@ -99,6 +99,11 @@ export interface Calculation {
 export interface FieldServiceRecord {
   id: string;
   serviceDate: string;
+  shiftId?: string;
+  shiftType?: 'A' | 'B';
+  shiftStartDate?: string;
+  shiftStartTime?: string;
+  shiftEndAt?: string;
   equipmentId: string;
   equipment: {
     internalNumber: string;
@@ -118,7 +123,15 @@ export interface FieldServiceRecord {
   updatedAt: number;
 }
 
+export interface ShiftSchedule {
+  dayStart: string;
+  dayEnd: string;
+  nightStart: string;
+  nightEnd: string;
+}
+
 export interface Settings {
   key: string;
   technician: TechnicianInfo;
+  shiftSchedule?: ShiftSchedule;
 }

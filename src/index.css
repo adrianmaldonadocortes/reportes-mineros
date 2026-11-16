@@ -141,6 +141,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 .service-failure { margin: 10px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .service-work { margin: 8px 0 12px; padding: 9px; border-radius: 9px; background: rgba(34,197,94,.08); overflow-wrap: anywhere; }
 .service-delete { display: block; margin: 10px 0 0 auto; color: #fca5a5; background: transparent; border: 0; padding: 6px; font: inherit; font-size: 12px; cursor: pointer; }
+.shift-schedule-hint { align-self: end; padding: 12px 0; }
+.active-shift-banner { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; color: #bfdbfe; background: linear-gradient(120deg, rgba(59,130,246,.17), rgba(30,41,59,.65)); border: 1px solid rgba(59,130,246,.25); font-size: 13px; }
+.active-shift-banner strong { color: #fff; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 
 @media (max-width: 520px) {

@@ -1,14 +1,14 @@
 import { jsPDF } from 'jspdf';
 import type { FieldServiceRecord } from './types';
 
-export function generateFieldServiceDailyPDF(records: FieldServiceRecord[], date: string) {
+export function generateFieldServiceDailyPDF(records: FieldServiceRecord[], date: string, title = 'Registro de atenciones') {
   const doc = new jsPDF();
   const [year, month, day] = date.split('-');
   const prettyDate = `${day}-${month}-${year}`;
   doc.setFontSize(18);
   doc.text('Atenciones en terreno', 14, 18);
   doc.setFontSize(11);
-  doc.text(`Registro diario · ${prettyDate}`, 14, 26);
+  doc.text(`${title} · ${prettyDate}`, 14, 26);
   doc.text(`Atenciones: ${records.length}`, 14, 33);
   let y = 43;
   records.forEach((record, index) => {
@@ -16,6 +16,7 @@ export function generateFieldServiceDailyPDF(records: FieldServiceRecord[], date
     const lines = [
       `${index + 1}. ${equipment.internalNumber} · ${equipment.type}${equipment.name ? ` · ${equipment.name}` : ''}`,
       `Flota: ${equipment.fleetName || 'Sin flota'}${equipment.brand || equipment.model ? ` · ${[equipment.brand, equipment.model].filter(Boolean).join(' ')}` : ''}`,
+      `Turno: ${record.shiftType ? `Turno ${record.shiftType} · Inicio ${record.shiftStartDate} ${record.shiftStartTime}` : 'Sin turno asociado'}`,
       `Aviso: ${record.reportedAt} · Estado: ${record.status === 'open' ? 'Pendiente' : 'Entregado'}`,
       `Falla: ${record.failure}`,
       ...(record.status === 'completed' ? [`Entrega: ${record.deliveredAt || '—'}`, `Trabajo realizado: ${record.workDone || 'Sin comentario'}`] : ['Equipo aún detenido'])
@@ -34,5 +35,5 @@ export function generateFieldServiceDailyPDF(records: FieldServiceRecord[], date
     doc.setFontSize(9);
     doc.text(`Página ${page} de ${pages}`, 196, 290, { align: 'right' });
   }
-  doc.save(`Atenciones_terreno_${date}.pdf`);
+  doc.save(`Atenciones_terreno_${title.toLocaleLowerCase('es').replace(/[^a-z0-9]+/g, '_')}_${date}.pdf`);
 }
