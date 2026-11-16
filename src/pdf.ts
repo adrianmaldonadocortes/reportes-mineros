@@ -18,13 +18,11 @@ export function generateReportPDF(report: Report) {
   const addHeader = () => {
     doc.setFillColor(...NAVY); doc.rect(0, 0, pageW, 34, 'F');
     doc.setFillColor(249, 115, 22); doc.rect(0, 34, pageW, 1.4, 'F');
-    doc.setFillColor(...BLUE); doc.roundedRect(M, 8, 14, 14, 3, 3, 'F');
-    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('RM', M + 3.2, 17);
-    doc.setFontSize(15); doc.text('INFORME TÉCNICO', M + 20, 14);
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text('INFORME TÉCNICO', M, 14);
     doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(203, 213, 225);
-    doc.text('REPORTE DE FALLA Y MANTENIMIENTO', M + 20, 21);
+    doc.text('REPORTE DE FALLA Y MANTENIMIENTO', M, 21);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255);
-    doc.text(report.technician.company || 'REPORTES MINEROS', M + 20, 28);
+    doc.text(report.technician.company || 'REPORTES MINEROS', M, 28);
     const doneColor: [number, number, number] = report.completed ? [34, 197, 94] : [245, 158, 11];
     const doneFill: [number, number, number] = report.completed ? [22, 101, 52] : [120, 53, 15];
     doc.setFillColor(...doneFill); doc.roundedRect(pageW - M - 38, 8, 38, 8, 4, 4, 'F');
