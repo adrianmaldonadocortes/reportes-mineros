@@ -104,10 +104,11 @@ th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: upp
 .helper { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .date-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; width: 100%; min-width: 0; }
 .date-row > div { width: 100%; min-width: 0; max-width: 100%; overflow: hidden; }
-.date-row input[type="date"] {
+.date-row input[type="date"], .date-row input[type="time"] {
   display: block; box-sizing: border-box; inline-size: 100%; width: 100%; min-inline-size: 0; min-width: 0;
   max-inline-size: 100%; max-width: 100%; font-size: 16px; -webkit-appearance: none; appearance: none;
 }
+input[type="time"] { display: block; box-sizing: border-box; inline-size: 100%; width: 100%; min-inline-size: 0; min-width: 0; max-inline-size: 100%; max-width: 100%; font-size: 16px; -webkit-appearance: none; appearance: none; }
 .calculation-table { overflow-x: auto; }
 .table-sub { font-size: 11px; color: var(--muted); }
 hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
@@ -144,6 +145,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 .shift-schedule-hint { align-self: end; padding: 12px 0; }
 .active-shift-banner { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; color: #bfdbfe; background: linear-gradient(120deg, rgba(59,130,246,.17), rgba(30,41,59,.65)); border: 1px solid rgba(59,130,246,.25); font-size: 13px; }
 .active-shift-banner strong { color: #fff; }
+.field-service-page, .field-service-page .card, .field-service-page .row, .field-service-page .row > div { min-width: 0; max-width: 100%; }
+.field-service-page .input, .field-service-page .select, .field-service-page .textarea { display: block; width: 100%; min-width: 0; max-width: 100%; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 
 @media (max-width: 520px) {
@@ -158,7 +161,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .period-tabs { flex-wrap: wrap; }
   .period-tabs .tab { flex: 1 1 100px; padding: 10px 6px; font-size: 12px; }
   .date-row { grid-template-columns: minmax(0, 1fr); }
-  .date-row input[type="date"] { padding-inline: 8px; }
+  .date-row input[type="date"], .date-row input[type="time"] { padding-inline: 8px; }
   .card { min-width: 0; padding: 12px; }
   .card[style*="padding: 0"] { overflow-x: auto; }
   .equipment-filters { grid-template-columns: minmax(0, 1fr); }
@@ -167,6 +170,11 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .equipment-detail-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .equipment-item { align-items: flex-start; }
   .service-record-heading { align-items: flex-start; }
+  .field-service-page .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .field-service-page .shift-schedule-hint { padding: 2px 0 8px; overflow-wrap: anywhere; }
+  .field-service-page .service-day-heading .btn { width: 100%; }
+  .field-service-page input[type="date"], .field-service-page input[type="time"] { box-sizing: border-box; display: block; inline-size: 100%; width: 100%; min-inline-size: 0; min-width: 0; max-inline-size: 100%; max-width: 100%; appearance: none; -webkit-appearance: none; padding-inline: 12px; }
+  .field-service-page .btn-row > .btn { flex: 1 1 100%; }
   table { table-layout: fixed; }
   th, td { padding: 6px 4px; overflow-wrap: anywhere; }
 }
