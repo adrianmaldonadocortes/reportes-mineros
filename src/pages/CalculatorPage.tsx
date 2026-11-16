@@ -12,6 +12,8 @@ export default function CalculatorPage() {
   const [endDate, setEndDate] = useState(toDateInput(new Date().toISOString()));
   const [selectedFleet, setSelectedFleet] = useState<string>('');
   const [selectedEquipment, setSelectedEquipment] = useState<string>('');
+  const [individualSource, setIndividualSource] = useState<'registered' | 'fleet' | 'manual'>('registered');
+  const [manualEquipment, setManualEquipment] = useState({ internalNumber: '', name: '', dailyHours: 24 });
   const [individualHours, setIndividualHours] = useState<number>(0);
   const [fleetHours, setFleetHours] = useState<Record<string, number>>({});
   const [saved, setSaved] = useState<string | null>(null);
@@ -40,6 +42,14 @@ export default function CalculatorPage() {
 
   const rows: CalculationRow[] = useMemo(() => {
     if (type === 'individual') {
+      if (individualSource === 'manual') {
+        const internalNumber = manualEquipment.internalNumber.trim() || manualEquipment.name.trim();
+        if (!internalNumber || manualEquipment.dailyHours <= 0) return [];
+        return [{
+          equipmentId: 'manual', internalNumber, name: manualEquipment.name.trim() || 'Equipo manual',
+          dailyHours: manualEquipment.dailyHours, stoppedHours: individualHours
+        }];
+      }
       const eq = equipments.find(e => e.id === selectedEquipment);
       if (!eq) return [];
       return [{
@@ -52,7 +62,7 @@ export default function CalculatorPage() {
         dailyHours: e.dailyHours, stoppedHours: fleetHours[e.id] || 0
       }));
     }
-  }, [type, selectedEquipment, equipments, individualHours, fleetEquipments, fleetHours]);
+  }, [type, individualSource, manualEquipment, selectedEquipment, equipments, individualHours, fleetEquipments, fleetHours]);
 
   const totalProgrammed = rows.reduce((s, r) => s + r.dailyHours * days, 0);
   const totalStopped = rows.reduce((s, r) => s + r.stoppedHours, 0);
@@ -100,11 +110,46 @@ export default function CalculatorPage() {
       {type === 'individual' && (
         <div className="card">
           <div className="card-title">Equipo</div>
-          <select className="select" value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
-            <option value="">Seleccionar equipo</option>
-            {equipments.map(e => <option key={e.id} value={e.id}>{e.internalNumber} · {e.name || e.type} ({e.dailyHours}h/día)</option>)}
+          <label className="label" htmlFor="equipment-source">Origen del equipo</label>
+          <select id="equipment-source" className="select" value={individualSource}
+            onChange={e => { setIndividualSource(e.target.value as typeof individualSource); setSelectedEquipment(''); }}>
+            <option value="registered">Equipo guardado</option>
+            <option value="fleet">Elegir desde mi flota</option>
+            <option value="manual">Ingresar equipo manualmente</option>
           </select>
-          {selectedEquipment && (
+          {individualSource === 'registered' && (
+            <select className="select" style={{ marginTop: 8 }} value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
+              <option value="">Seleccionar equipo</option>
+              {equipments.map(e => <option key={e.id} value={e.id}>{e.internalNumber} · {e.name || e.type} ({e.dailyHours}h/día)</option>)}
+            </select>
+          )}
+          {individualSource === 'fleet' && <>
+            <label className="label" htmlFor="individual-fleet">Flota</label>
+            <select id="individual-fleet" className="select" value={selectedFleet}
+              onChange={e => { setSelectedFleet(e.target.value); setSelectedEquipment(''); }}>
+              <option value="">Seleccionar flota</option>
+              {fleets.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            <label className="label" htmlFor="fleet-equipment">Equipo de la flota</label>
+            <select id="fleet-equipment" className="select" value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
+              <option value="">Seleccionar equipo</option>
+              {fleetEquipments.map(e => <option key={e.id} value={e.id}>{e.internalNumber} · {e.name || e.type} ({e.dailyHours}h/día)</option>)}
+            </select>
+          </>}
+          {individualSource === 'manual' && <>
+            <label className="label">N° interno (o nombre del equipo)</label>
+            <input className="input" value={manualEquipment.internalNumber}
+              onChange={e => setManualEquipment(v => ({ ...v, internalNumber: e.target.value }))} />
+            <label className="label">Nombre / descripción</label>
+            <input className="input" value={manualEquipment.name}
+              onChange={e => setManualEquipment(v => ({ ...v, name: e.target.value }))} />
+            <label className="label">Horas programadas por día</label>
+            <input className="input" type="number" min="0.5" step="0.5" value={manualEquipment.dailyHours}
+              onChange={e => setManualEquipment(v => ({ ...v, dailyHours: Number(e.target.value) || 0 }))} />
+            {!manualEquipment.internalNumber.trim() && !manualEquipment.name.trim() &&
+              <div className="helper">Ingresa un número interno o el nombre del equipo para calcular.</div>}
+          </>}
+          {(individualSource === 'manual' ? rows.length > 0 : selectedEquipment !== '') && (
             <>
               <label className="label">Horas detenidas (total del período)</label>
               <input className="input" type="number" min="0" step="0.5" value={individualHours}

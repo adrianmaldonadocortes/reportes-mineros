@@ -28,9 +28,9 @@ body {
   position: sticky; top: 0; z-index: 10; padding-top: calc(12px + env(safe-area-inset-top));
 }
 .topbar-title { font-weight: 700; color: #fff; font-size: 15px; }
-.back { color: var(--blue); text-decoration: none; font-weight: 600; width: 60px; }
+.back { color: #93c5fd; text-decoration: none; font-weight: 700; width: 72px; border: 0; background: transparent; padding: 10px 0; font: inherit; text-align: left; cursor: pointer; }
 .main { padding: 16px; max-width: 640px; margin: 0 auto; width: 100%; }
-.home { padding: calc(24px + env(safe-area-inset-top)) 16px 24px; max-width: 640px; margin: 0 auto; }
+.home { padding: calc(40px + env(safe-area-inset-top)) 16px 24px; max-width: 640px; margin: 0 auto; }
 .home-title { font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #fff; }
 .home-sub { color: var(--muted); margin: 0 0 24px; font-size: 13px; }
 .grid { display: grid; gap: 12px; }
@@ -70,8 +70,8 @@ body {
 }
 .input:focus, .select:focus, .textarea:focus { border-color: var(--blue); }
 .textarea { min-height: 70px; resize: vertical; }
-.row { display: flex; gap: 8px; align-items: center; }
-.row > * { flex: 1; }
+.row { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.row > * { flex: 1; min-width: 0; }
 .list-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--border); }
 .list-item:last-child { border-bottom: none; }
 .list-item-title { font-weight: 700; color: #fff; font-size: 14px; }
@@ -103,3 +103,18 @@ th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: upp
 .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 26px; border: none; box-shadow: 0 6px 20px rgba(249,115,22,.4); cursor: pointer; z-index: 50; }
 .helper { font-size: 12px; color: var(--muted); margin-top: 4px; }
 hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+@media (max-width: 520px) {
+  html, body, #root { width: 100%; overflow-x: hidden; }
+  .main { padding: 12px; }
+  .home { padding: calc(48px + env(safe-area-inset-top)) 12px 24px; }
+  .grid { gap: 8px; }
+  .tile { min-width: 0; padding: 14px 12px; }
+  .tile-title, .tile-sub { overflow-wrap: anywhere; }
+  .row { flex-wrap: wrap; }
+  .row > * { flex-basis: calc(50% - 4px); }
+  .card { min-width: 0; padding: 12px; }
+  .card[style*="padding: 0"] { overflow-x: auto; }
+  table { table-layout: fixed; }
+  th, td { padding: 6px 4px; overflow-wrap: anywhere; }
+}

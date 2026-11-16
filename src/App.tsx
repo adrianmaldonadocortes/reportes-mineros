@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import EquipmentPage from './pages/EquipmentPage';
 import FleetsPage from './pages/FleetsPage';
@@ -10,13 +10,16 @@ import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === '/';
 
   return (
     <div className="app">
       {!isHome && (
         <header className="topbar">
-          <Link to="/" className="back">‹ Inicio</Link>
+          <button className="back" onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/')}>
+            ‹ Volver
+          </button>
           <span className="topbar-title">Reportes Mineros</span>
           <span style={{ width: 60 }} />
         </header>
