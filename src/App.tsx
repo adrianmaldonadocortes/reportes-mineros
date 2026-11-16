@@ -1,0 +1,39 @@
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import Home from './pages/Home';
+import EquipmentPage from './pages/EquipmentPage';
+import FleetsPage from './pages/FleetsPage';
+import ReportsPage from './pages/ReportsPage';
+import ReportFormPage from './pages/ReportFormPage';
+import CalculatorPage from './pages/CalculatorPage';
+import HistoryPage from './pages/HistoryPage';
+import SettingsPage from './pages/SettingsPage';
+
+export default function App() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
+  return (
+    <div className="app">
+      {!isHome && (
+        <header className="topbar">
+          <Link to="/" className="back">‹ Inicio</Link>
+          <span className="topbar-title">Reportes Mineros</span>
+          <span style={{ width: 60 }} />
+        </header>
+      )}
+      <main className={isHome ? '' : 'main'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/equipos" element={<EquipmentPage />} />
+          <Route path="/flotas" element={<FleetsPage />} />
+          <Route path="/informes" element={<ReportsPage />} />
+          <Route path="/informes/:id" element={<ReportFormPage />} />
+          <Route path="/informes/nuevo" element={<ReportFormPage />} />
+          <Route path="/calculadora" element={<CalculatorPage />} />
+          <Route path="/historial" element={<HistoryPage />} />
+          <Route path="/configuracion" element={<SettingsPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
