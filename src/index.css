@@ -64,7 +64,7 @@ body {
 .card-title { font-weight: 700; color: #fff; margin-bottom: 10px; }
 .label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
 .input, .select, .textarea {
-  width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+  width: 100%; min-width: 0; max-width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--bg-2); color: var(--text); font-size: 15px; font-family: inherit;
   outline: none;
 }
@@ -113,6 +113,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
   .tile-title, .tile-sub { overflow-wrap: anywhere; }
   .row { flex-wrap: wrap; }
   .row > * { flex-basis: calc(50% - 4px); }
+  .date-row { flex-direction: column; align-items: stretch; }
+  .date-row > * { flex-basis: auto; width: 100%; }
+  .date-row input[type="date"] { min-width: 0; width: 100%; font-size: 14px; }
   .card { min-width: 0; padding: 12px; }
   .card[style*="padding: 0"] { overflow-x: auto; }
   table { table-layout: fixed; }

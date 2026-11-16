@@ -100,7 +100,7 @@ export default function CalculatorPage() {
           <button className={'tab ' + (period === 'monthly' ? 'active' : '')} onClick={() => applyPeriod('monthly')}>Mensual</button>
           <button className={'tab ' + (period === 'custom' ? 'active' : '')} onClick={() => applyPeriod('custom')}>Personal.</button>
         </div>
-        <div className="row">
+        <div className="row date-row">
           <div><label className="label">Desde</label><input className="input" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
           <div><label className="label">Hasta</label><input className="input" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
         </div>
