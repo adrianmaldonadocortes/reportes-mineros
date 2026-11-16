@@ -132,6 +132,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 .equipment-status-maintenance { color: #fde68a; border-color: rgba(245,158,11,.25); background: linear-gradient(135deg, rgba(245,158,11,.16), rgba(245,158,11,.06)); }
 .equipment-status-out { color: #fca5a5; border-color: rgba(239,68,68,.25); background: linear-gradient(135deg, rgba(239,68,68,.16), rgba(239,68,68,.06)); }
 .equipment-status-retired { color: #cbd5e1; border-color: rgba(203,213,225,.2); background: linear-gradient(135deg, rgba(203,213,225,.12), rgba(148,163,184,.05)); }
+.availability-exempt-toggle { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(15,23,42,.3); cursor: pointer; }
+.availability-exempt-toggle input { flex: 0 0 auto; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--blue); }
+.availability-exempt-toggle span { display: grid; gap: 3px; }
+.availability-exempt-toggle strong { color: var(--text); font-size: 13px; }
+.availability-exempt-toggle small { color: var(--muted); font-size: 12px; }
+.equipment-exemption-badge { display: inline-block; margin-top: 4px; padding: 2px 7px; border: 1px solid rgba(96,165,250,.24); border-radius: 999px; color: #bfdbfe; background: rgba(59,130,246,.1); font-size: 10px; }
 .equipment-details { margin-top: 12px; }
 .equipment-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .equipment-detail-label { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }

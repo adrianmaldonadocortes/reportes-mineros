@@ -111,7 +111,8 @@ export default function EquipmentPage() {
           {[
             ['Tipo', selected.type], ['Marca', selected.brand], ['Modelo', selected.model],
             ['N° de serie', selected.serialNumber], ['Flota', fleets.find(f => f.id === selected.fleetId)?.name || 'Sin flota'],
-            ['Área / sector', selected.area], ['Horas programadas al día', selected.dailyHours ? `${selected.dailyHours} h` : '']
+            ['Área / sector', selected.area], ['Horas programadas al día', `${selected.dailyHours} h`],
+            ['Disponibilidad', selected.availabilityExempt ? 'No sujeto a disponibilidad' : 'Incluido en disponibilidad']
           ].filter(([, value]) => Boolean(value)).map(([label, value]) => (
             <div key={label}><div className="equipment-detail-label">{label}</div><div>{value}</div></div>
           ))}
@@ -145,9 +146,14 @@ export default function EquipmentPage() {
           <div><label className="label">Flota</label><select className="select" value={editing.fleetId} onChange={e => setEditing({ ...editing, fleetId: e.target.value })}>
             <option value="">Sin flota</option>{fleets.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select></div>
-          <div><label className="label">Horas programadas al día</label><input className="input" type="number" min="1" max="24" value={editing.dailyHours}
-            onChange={e => setEditing({ ...editing, dailyHours: Number(e.target.value) || 24 })} /></div>
+          <div><label className="label">Horas programadas al día</label><input className="input" type="number" min="0" max="24" step="0.5" value={editing.dailyHours}
+            onChange={e => setEditing({ ...editing, dailyHours: e.target.value === '' ? 0 : Number(e.target.value) })} />
+            <div className="helper">Permite ingresar 0 a 24 horas; 0 horas excluye el equipo de la base de cálculo.</div></div>
         </div>
+        <label className="availability-exempt-toggle">
+          <input type="checkbox" checked={Boolean(editing.availabilityExempt)} onChange={e => setEditing({ ...editing, availabilityExempt: e.target.checked })} />
+          <span><strong>No sujeto a disponibilidad</strong><small>Excluir este equipo de los cálculos de disponibilidad de su flota.</small></span>
+        </label>
         <div className="btn-row" style={{ marginTop: 14 }}>
           <button className="btn" onClick={save}>Guardar</button>
           {list.some(x => x.id === editing.id) && <button className="btn danger" onClick={() => remove(editing)}>Eliminar equipo</button>}
@@ -165,6 +171,7 @@ export default function EquipmentPage() {
                 <div className="equipment-item-title"><strong>{e.internalNumber}</strong><span>{e.type}</span></div>
                 <div className="equipment-item-specs">
                   {[e.brand, e.model, fleet?.name].filter(Boolean).join(' · ')}
+                  {e.availabilityExempt && <span className="equipment-exemption-badge">No aplica disponibilidad</span>}
                   {e.serialNumber && <span className="equipment-serial">Serie: {e.serialNumber}</span>}
                 </div>
               </div>

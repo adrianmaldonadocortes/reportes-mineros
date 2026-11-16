@@ -34,17 +34,19 @@ export default function CalculatorPage() {
   useEffect(() => {
     (async () => {
       const [equipmentList, fleetList] = await Promise.all([listEquipment(), listFleets()]);
-      setEquipments(equipmentList.filter(e => e.status === 'active'));
+      setEquipments(equipmentList.filter(e => e.status !== 'retired'));
       setFleets(fleetList);
-      if (equipmentList.some(e => e.status === 'active')) setSelectedEquipment(equipmentList.find(e => e.status === 'active')!.id);
+      const selectable = equipmentList.find(e => e.status === 'active' && !e.availabilityExempt && e.dailyHours > 0);
+      if (selectable) setSelectedEquipment(selectable.id);
       else setSource('manual');
     })();
   }, []);
 
   const equipment = equipments.find(e => e.id === selectedEquipment);
-  const equipmentFleet = equipment?.fleetId
+  const fleetPopulation = equipment?.fleetId
     ? equipments.filter(e => e.fleetId === equipment.fleetId)
     : equipment ? [equipment] : [];
+  const equipmentFleet = fleetPopulation.filter(e => !e.availabilityExempt && e.dailyHours > 0);
   const fleetCount = source === 'manual' ? manualFleet.count : equipmentFleet.length;
   const fleetDailyHours = source === 'manual'
     ? manualFleet.count * manualFleet.dailyHours
@@ -105,7 +107,7 @@ export default function CalculatorPage() {
           <label className="label" htmlFor="equipment-select">Equipo detenido</label>
           <select id="equipment-select" className="select" value={selectedEquipment} onChange={e => setSelectedEquipment(e.target.value)}>
             <option value="">Seleccionar equipo</option>
-            {equipments.map(e => {
+            {equipments.filter(e => e.status === 'active' && !e.availabilityExempt && e.dailyHours > 0).map(e => {
               const fleet = fleets.find(f => f.id === e.fleetId);
               return <option key={e.id} value={e.id}>
                 {e.internalNumber} · {e.name || e.type}{fleet ? ` · Flota: ${fleet.name}` : ' · Sin flota'}
@@ -114,7 +116,7 @@ export default function CalculatorPage() {
           </select>
           {equipment && <div className="helper">
             {equipment.fleetId
-              ? `${equipmentFleet.length} equipo(s) en la flota · ${fleetDailyHours} horas programadas por día en total.`
+              ? `${equipmentFleet.length} equipo(s) incluidos en la disponibilidad de la flota · ${fleetDailyHours} horas programadas por día en total.${fleetPopulation.length > equipmentFleet.length ? ` ${fleetPopulation.length - equipmentFleet.length} equipo(s) excluidos por exención o 0 horas.` : ''}`
               : 'Este equipo no está asociado a una flota guardada; se calculará como un equipo.'}
           </div>}
         </> : <>

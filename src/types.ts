@@ -17,6 +17,7 @@ export interface Equipment {
   area: string;
   fleetId: string;
   dailyHours: number;
+  availabilityExempt?: boolean;
   status: EquipmentStatus;
   createdAt: number;
 }
